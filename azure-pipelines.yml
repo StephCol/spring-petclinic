@@ -27,9 +27,3 @@ steps:
     reportDirectory: "$(System.DefaultWorkingDirectory)/**/site/jacoco"
     failIfCoverageEmpty: true
     additionalCodeCoverageFiles:
-- task: Docker@2
-  displayName: Build an image
-  inputs:
-    repository: spring-boot
-    command: build
-    Dockerfile: app/Dockerfile
