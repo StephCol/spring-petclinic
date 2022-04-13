@@ -1,0 +1,51 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
+name: Build and deploy container app to Azure Web App - devprojectapp
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: 'ubuntu-latest'
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Log in to registry
+      uses: docker/login-action@v1
+      with:
+        registry: https://devopsproject22.azurecr.io/
+        username: ${{ secrets.AzureAppService_ContainerUsername_84565dfeef884c15b9c4aeedfa37eaa7 }}
+        password: ${{ secrets.AzureAppService_ContainerPassword_b6328adb867f45e59807db2af2b930f6 }}
+
+    - name: Build and push container image to registry
+      uses: docker/build-push-action@v2
+      with:
+        push: true
+        tags: devopsproject22.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_84565dfeef884c15b9c4aeedfa37eaa7 }}/spring-petclinic:${{ github.sha }}
+        file: ./Dockerfile
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: 'production'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+
+    steps:
+    - name: Deploy to Azure Web App
+      id: deploy-to-webapp
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: 'devprojectapp'
+        slot-name: 'production'
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_658db6af580f4a06a814ff9d0cb8e92e }}
+        images: 'devopsproject22.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_84565dfeef884c15b9c4aeedfa37eaa7 }}/spring-petclinic:${{ github.sha }}'
